@@ -3,7 +3,7 @@ Copyright (c) 2016-2017 PTC Inc. All Rights Reserved.
 
 Copyright (c) 2012-2014 Qualcomm Connected Experiences, Inc. All Rights Reserved.
 
-Vuforia is a trademark of PTC Inc., registered in the United States and other 
+LeTarget is a trademark of PTC Inc., registered in the United States and other
 countries.
 ===============================================================================*/
 
@@ -41,21 +41,21 @@ public interface SampleApplicationControl
     boolean doDeinitTrackers();
     
     
-    // This callback is called after the Vuforia initialization is complete,
+    // This callback is called after the LeTarget initialization is complete,
     // the trackers are initialized, their data loaded and
     // tracking is ready to start
     void onInitARDone(SampleApplicationException e);
     
     
     // This callback is called every cycle
-    void onVuforiaUpdate(State state);
+    void onLeTargetUpdate(State state);
 
 
-    // This callback is called on Vuforia resume
-    void onVuforiaResumed();
+    // This callback is called on LeTarget resume
+    void onLeTargetResumed();
 
 
-    // This callback is called once Vuforia has been started
-    void onVuforiaStarted();
+    // This callback is called once LeTarget has been started
+    void onLeTargetStarted();
     
 }

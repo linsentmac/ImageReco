@@ -1,6 +1,8 @@
 package cn.lenovo.letarget;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.os.Handler;
 import android.util.Log;
@@ -49,7 +51,7 @@ public class CloudCardRecognize implements SampleApplicationControl {
     private ImageRecoRenderListener mListener;
     private Activity mActivity;
 
-    private SampleApplicationSession vuforiaAppSession;
+    private SampleApplicationSession leTargetAppSession;
 
     // Our OpenGL view:
     private SampleApplicationGLView mGlView;
@@ -63,17 +65,21 @@ public class CloudCardRecognize implements SampleApplicationControl {
     private boolean mIsDroidDevice = false;
 
     // tmac custom
-    private static final String kAccessKey = "9490889251d27d3aef8c8277fcdf34954692b7f4";
-    private static final String kSecretKey = "74830034b893fb6bee7e081df5503819e630b669";
-    private int mInitErrorCode = 0;
+    private String kAccessKey = "9490889251d27d3aef8c8277fcdf34954692b7f4";
+    private String kSecretKey = "74830034b893fb6bee7e081df5503819e630b669";
 
 
-    public CloudCardRecognize(ImageRecoRenderListener listener, Activity activity){
+    public CloudCardRecognize(ImageRecoRenderListener listener, Activity activity,
+                              String license_key,
+                              String accessKey,
+                              String secretKey){
         mListener = listener;
         mActivity = activity;
+        kAccessKey = accessKey;
+        kSecretKey = secretKey;
 
-        vuforiaAppSession = new SampleApplicationSession(this);
-        vuforiaAppSession
+        leTargetAppSession = new SampleApplicationSession(this, license_key);
+        leTargetAppSession
                 .initAR(mActivity, ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         // Creates the GestureDetector listener for processing double tap
@@ -92,13 +98,13 @@ public class CloudCardRecognize implements SampleApplicationControl {
             mActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
             mActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         }
-        vuforiaAppSession.onResume();
+        leTargetAppSession.onResume();
     }
 
     public void onPause(){
         try
         {
-            vuforiaAppSession.pauseAR();
+            leTargetAppSession.pauseAR();
         } catch (SampleApplicationException e)
         {
             e.printStackTrace();
@@ -115,7 +121,7 @@ public class CloudCardRecognize implements SampleApplicationControl {
     public void onDestory(){
         try
         {
-            vuforiaAppSession.stopAR();
+            leTargetAppSession.stopAR();
         } catch (SampleApplicationException e)
         {
             e.printStackTrace();
@@ -136,7 +142,7 @@ public class CloudCardRecognize implements SampleApplicationControl {
         mGlView.init(translucent, depthSize, stencilSize);
 
         // Setups the Renderer of the GLView
-        mRenderer = new CloudRecoRenderer(vuforiaAppSession, mActivity, mListener);
+        mRenderer = new CloudRecoRenderer(leTargetAppSession, mActivity, mListener);
         mRenderer.setTextures(mTextures);
         mGlView.setRenderer(mRenderer);
 
@@ -322,6 +328,7 @@ public class CloudCardRecognize implements SampleApplicationControl {
 
     @Override
     public void onInitARDone(SampleApplicationException exception) {
+        Log.d(LOGTAG, "LeTarget onInitARDone .... ");
         if (exception == null)
         {
             initApplicationAR();
@@ -336,7 +343,7 @@ public class CloudCardRecognize implements SampleApplicationControl {
             mActivity.addContentView(mGlView, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT));
 
-            vuforiaAppSession.startAR(CameraDevice.CAMERA_DIRECTION.CAMERA_DIRECTION_DEFAULT);
+            leTargetAppSession.startAR(CameraDevice.CAMERA_DIRECTION.CAMERA_DIRECTION_DEFAULT);
 
             mListener.initARDone();
             /*mUILayout.bringToFront();
@@ -349,23 +356,24 @@ public class CloudCardRecognize implements SampleApplicationControl {
             mSampleAppMenu = new SampleAppMenu(this, this, "Cloud Reco",
                     mGlView, mUILayout, null);
             setSampleAppMenuSettings();*/
-
+            Log.d(LOGTAG, "LeTarget onInitARDone Success .... ");
         } else
         {
-            Log.e(LOGTAG, exception.getString());
+            Log.e(LOGTAG, "LeTarget onInitARDone error ==== " + exception.getString() +
+                    "\nmInitErroeCode = " + mInitErrorCode);
             if(mInitErrorCode != 0)
             {
-                //showErrorMessage(mInitErrorCode,10, true);
+                showErrorMessage(mInitErrorCode,10, true);
             }
             else
             {
-                //showInitializationErrorMessage(exception.getString());
+                showInitializationErrorMessage(exception.getString());
             }
         }
     }
 
     @Override
-    public void onVuforiaUpdate(State state) {
+    public void onLeTargetUpdate(State state) {
         // Get the tracker manager:
         TrackerManager trackerManager = TrackerManager.getInstance();
 
@@ -387,7 +395,7 @@ public class CloudCardRecognize implements SampleApplicationControl {
                     statusCode == UPDATE_ERROR_NO_NETWORK_CONNECTION ||
                             statusCode == UPDATE_ERROR_SERVICE_NOT_AVAILABLE);
 
-            //showErrorMessage(statusCode, state.getFrame().getTimeStamp(), closeAppAfterError);
+            showErrorMessage(statusCode, state.getFrame().getTimeStamp(), closeAppAfterError);
 
         } else if (statusCode == TargetFinder.UPDATE_RESULTS_AVAILABLE)
         {
@@ -409,7 +417,7 @@ public class CloudCardRecognize implements SampleApplicationControl {
     }
 
     @Override
-    public void onVuforiaResumed() {
+    public void onLeTargetResumed() {
         if (mGlView != null)
         {
             mGlView.setVisibility(View.VISIBLE);
@@ -418,7 +426,7 @@ public class CloudCardRecognize implements SampleApplicationControl {
     }
 
     @Override
-    public void onVuforiaStarted() {
+    public void onLeTargetStarted() {
         // Set camera focus mode
         if(!CameraDevice.getInstance().setFocusMode(CameraDevice.FOCUS_MODE.FOCUS_MODE_CONTINUOUSAUTO))
         {
@@ -429,4 +437,153 @@ public class CloudCardRecognize implements SampleApplicationControl {
             }
         }
     }
+
+    private double mLastErrorTime;
+
+    // Error message handling:
+    private int mlastErrorCode = 0;
+    private int mInitErrorCode = 0;
+    private boolean mFinishActivityOnError;
+
+
+    // Alert Dialog used to display SDK errors
+    private AlertDialog mErrorDialog;
+
+
+    // Shows error messages as System dialogs
+    public void showErrorMessage(int errorCode, double errorTime, boolean finishActivityOnError)
+    {
+        if (errorTime < (mLastErrorTime + 5.0) || errorCode == mlastErrorCode)
+            return;
+
+        mlastErrorCode = errorCode;
+        mFinishActivityOnError = finishActivityOnError;
+
+        mActivity.runOnUiThread(new Runnable()
+        {
+            public void run()
+            {
+                if (mErrorDialog != null)
+                {
+                    mErrorDialog.dismiss();
+                }
+
+                // Generates an Alert Dialog to show the error message
+                AlertDialog.Builder builder = new AlertDialog.Builder(
+                        mActivity);
+                builder
+                        .setMessage(
+                                getStatusDescString(CloudCardRecognize.this.mlastErrorCode))
+                        .setTitle(
+                                getStatusTitleString(CloudCardRecognize.this.mlastErrorCode))
+                        .setCancelable(false)
+                        .setIcon(0)
+                        .setPositiveButton(mActivity.getString(R.string.button_OK),
+                                new DialogInterface.OnClickListener()
+                                {
+                                    public void onClick(DialogInterface dialog, int id)
+                                    {
+                                        if(mFinishActivityOnError)
+                                        {
+                                            mActivity.finish();
+                                        }
+                                        else
+                                        {
+                                            dialog.dismiss();
+                                        }
+                                    }
+                                });
+
+                mErrorDialog = builder.create();
+                mErrorDialog.show();
+            }
+        });
+    }
+
+    // Shows initialization error messages as System dialogs
+    public void showInitializationErrorMessage(String message)
+    {
+        final String errorMessage = message;
+        mActivity.runOnUiThread(new Runnable()
+        {
+            public void run()
+            {
+                if (mErrorDialog != null)
+                {
+                    mErrorDialog.dismiss();
+                }
+
+                // Generates an Alert Dialog to show the error message
+                AlertDialog.Builder builder = new AlertDialog.Builder(
+                        mActivity);
+                builder
+                        .setMessage(errorMessage)
+                        .setTitle(mActivity.getString(R.string.INIT_ERROR))
+                        .setCancelable(false)
+                        .setIcon(0)
+                        .setPositiveButton(mActivity.getString(R.string.button_OK),
+                                new DialogInterface.OnClickListener()
+                                {
+                                    public void onClick(DialogInterface dialog, int id)
+                                    {
+                                        mActivity.finish();
+                                    }
+                                });
+
+                mErrorDialog = builder.create();
+                mErrorDialog.show();
+            }
+        });
+    }
+
+    // Returns the error message for each error code
+    private String getStatusDescString(int code)
+    {
+        if (code == UPDATE_ERROR_AUTHORIZATION_FAILED)
+            return mActivity.getString(R.string.UPDATE_ERROR_AUTHORIZATION_FAILED_DESC);
+        if (code == UPDATE_ERROR_PROJECT_SUSPENDED)
+            return mActivity.getString(R.string.UPDATE_ERROR_PROJECT_SUSPENDED_DESC);
+        if (code == UPDATE_ERROR_NO_NETWORK_CONNECTION)
+            return mActivity.getString(R.string.UPDATE_ERROR_NO_NETWORK_CONNECTION_DESC);
+        if (code == UPDATE_ERROR_SERVICE_NOT_AVAILABLE)
+            return mActivity.getString(R.string.UPDATE_ERROR_SERVICE_NOT_AVAILABLE_DESC);
+        if (code == UPDATE_ERROR_UPDATE_SDK)
+            return mActivity.getString(R.string.UPDATE_ERROR_UPDATE_SDK_DESC);
+        if (code == UPDATE_ERROR_TIMESTAMP_OUT_OF_RANGE)
+            return mActivity.getString(R.string.UPDATE_ERROR_TIMESTAMP_OUT_OF_RANGE_DESC);
+        if (code == UPDATE_ERROR_REQUEST_TIMEOUT)
+            return mActivity.getString(R.string.UPDATE_ERROR_REQUEST_TIMEOUT_DESC);
+        if (code == UPDATE_ERROR_BAD_FRAME_QUALITY)
+            return mActivity.getString(R.string.UPDATE_ERROR_BAD_FRAME_QUALITY_DESC);
+        else
+        {
+            return mActivity.getString(R.string.UPDATE_ERROR_UNKNOWN_DESC);
+        }
+    }
+
+    // Returns the error message for each error code
+    private String getStatusTitleString(int code)
+    {
+        if (code == UPDATE_ERROR_AUTHORIZATION_FAILED)
+            return mActivity.getString(R.string.UPDATE_ERROR_AUTHORIZATION_FAILED_TITLE);
+        if (code == UPDATE_ERROR_PROJECT_SUSPENDED)
+            return mActivity.getString(R.string.UPDATE_ERROR_PROJECT_SUSPENDED_TITLE);
+        if (code == UPDATE_ERROR_NO_NETWORK_CONNECTION)
+            return mActivity.getString(R.string.UPDATE_ERROR_NO_NETWORK_CONNECTION_TITLE);
+        if (code == UPDATE_ERROR_SERVICE_NOT_AVAILABLE)
+            return mActivity.getString(R.string.UPDATE_ERROR_SERVICE_NOT_AVAILABLE_TITLE);
+        if (code == UPDATE_ERROR_UPDATE_SDK)
+            return mActivity.getString(R.string.UPDATE_ERROR_UPDATE_SDK_TITLE);
+        if (code == UPDATE_ERROR_TIMESTAMP_OUT_OF_RANGE)
+            return mActivity.getString(R.string.UPDATE_ERROR_TIMESTAMP_OUT_OF_RANGE_TITLE);
+        if (code == UPDATE_ERROR_REQUEST_TIMEOUT)
+            return mActivity.getString(R.string.UPDATE_ERROR_REQUEST_TIMEOUT_TITLE);
+        if (code == UPDATE_ERROR_BAD_FRAME_QUALITY)
+            return mActivity.getString(R.string.UPDATE_ERROR_BAD_FRAME_QUALITY_TITLE);
+        else
+        {
+            return mActivity.getString(R.string.UPDATE_ERROR_UNKNOWN_TITLE);
+        }
+    }
+
 }

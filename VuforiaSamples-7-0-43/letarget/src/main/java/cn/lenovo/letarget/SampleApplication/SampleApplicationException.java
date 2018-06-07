@@ -3,20 +3,20 @@ Copyright (c) 2016 PTC Inc. All Rights Reserved.
 
 Copyright (c) 2012-2014 Qualcomm Connected Experiences, Inc. All Rights Reserved.
 
-Vuforia is a trademark of PTC Inc., registered in the United States and other 
+LeTarget is a trademark of PTC Inc., registered in the United States and other
 countries.
 ===============================================================================*/
 
 package cn.lenovo.letarget.SampleApplication;
 
-// Used to send back to the activity any error during vuforia processes
+// Used to send back to the activity any error during LeTarget processes
 public class SampleApplicationException extends Exception
 {
     
     private static final long serialVersionUID = 2L;
     
     public static final int INITIALIZATION_FAILURE = 0;
-    public static final int VUFORIA_ALREADY_INITIALIZATED = 1;
+    public static final int LATARGET_ALREADY_INITIALIZATED = 1;
     public static final int TRACKERS_INITIALIZATION_FAILURE = 2;
     public static final int LOADING_TRACKERS_FAILURE = 3;
     public static final int UNLOADING_TRACKERS_FAILURE = 4;

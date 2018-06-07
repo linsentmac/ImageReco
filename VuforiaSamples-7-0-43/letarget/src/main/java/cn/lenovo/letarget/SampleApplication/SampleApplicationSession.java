@@ -3,7 +3,7 @@ Copyright (c) 2016-2017 PTC Inc. All Rights Reserved.
 
 Copyright (c) 2012-2015 Qualcomm Connected Experiences, Inc. All Rights Reserved.
 
-Vuforia is a trademark of PTC Inc., registered in the United States and other 
+LeTarget is a trademark of PTC Inc., registered in the United States and other
 countries.
 ===============================================================================*/
 
@@ -42,36 +42,38 @@ public class SampleApplicationSession implements UpdateCallbackInterface
     private boolean mStarted = false;
     private boolean mCameraRunning = false;
     
-    // The async tasks to initialize the Vuforia SDK:
-    private InitVuforiaTask mInitVuforiaTask;
+    // The async tasks to initialize the LeTarget SDK:
+    private InitLeTargetTask mInitLeTargetTask;
     private InitTrackerTask mInitTrackerTask;
     private LoadTrackerTask mLoadTrackerTask;
-    private StartVuforiaTask mStartVuforiaTask;
-    private ResumeVuforiaTask mResumeVuforiaTask;
+    private StartLeTargetTask mStartLeTargetTask;
+    private ResumeLeTargetTask mResumeLeTargetTask;
     
-    // An object used for synchronizing Vuforia initialization, dataset loading
+    // An object used for synchronizing LeTarget initialization, dataset loading
     // and the Android onDestroy() life cycle event. If the application is
     // destroyed while a data set is still being loaded, then we wait for the
-    // loading operation to finish before shutting down Vuforia:
+    // loading operation to finish before shutting down LeTarget:
     private final Object mLifecycleLock = new Object();
     
-    // Vuforia initialization flags:
-    private int mVuforiaFlags = 0;
+    // LeTarget initialization flags:
+    private int mLeTargetFlags = 0;
     
     // Holds the camera configuration to use upon resuming
     private int mCamera = CameraDevice.CAMERA_DIRECTION.CAMERA_DIRECTION_DEFAULT;
-    
 
-    public SampleApplicationSession(SampleApplicationControl sessionControl)
+    private String LICENSE_KEY;
+
+    public SampleApplicationSession(SampleApplicationControl sessionControl, String key)
     {
         mSessionControl = sessionControl;
+        LICENSE_KEY = key;
     }
     
     
-    // Initializes Vuforia and sets up preferences.
+    // Initializes LeTarget and sets up preferences.
     public void initAR(Activity activity, int screenOrientation)
     {
-        SampleApplicationException vuforiaException = null;
+        SampleApplicationException LeTargetException = null;
         mActivity = activity;
         
         if ((screenOrientation == ActivityInfo.SCREEN_ORIENTATION_SENSOR)
@@ -80,7 +82,7 @@ public class SampleApplicationSession implements UpdateCallbackInterface
         
         // Use an OrientationChangeListener here to capture all orientation changes.  Android
         // will not send an Activity.onConfigurationChanged() callback on a 180 degree rotation,
-        // ie: Left Landscape to Right Landscape.  Vuforia needs to react to this change and the
+        // ie: Left Landscape to Right Landscape.  LeTarget needs to react to this change and the
         // SampleApplicationSession needs to update the Projection Matrix.
         OrientationEventListener orientationEventListener = new OrientationEventListener(mActivity) {
             @Override
@@ -107,48 +109,48 @@ public class SampleApplicationSession implements UpdateCallbackInterface
             WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
             WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         
-        mVuforiaFlags = INIT_FLAGS.GL_20;
+        mLeTargetFlags = INIT_FLAGS.GL_20;
         
-        // Initialize Vuforia SDK asynchronously to avoid blocking the
+        // Initialize LeTarget SDK asynchronously to avoid blocking the
         // main (UI) thread.
         //
         // NOTE: This task instance must be created and invoked on the
         // UI thread and it can be executed only once!
-        if (mInitVuforiaTask != null)
+        if (mInitLeTargetTask != null)
         {
             String logMessage = "Cannot initialize SDK twice";
-            vuforiaException = new SampleApplicationException(
-                SampleApplicationException.VUFORIA_ALREADY_INITIALIZATED,
+            LeTargetException = new SampleApplicationException(
+                SampleApplicationException.LATARGET_ALREADY_INITIALIZATED,
                 logMessage);
             Log.e(LOGTAG, logMessage);
         }
         
-        if (vuforiaException == null)
+        if (LeTargetException == null)
         {
             try {
-                mInitVuforiaTask = new InitVuforiaTask();
-                mInitVuforiaTask.execute();
+                mInitLeTargetTask = new InitLeTargetTask();
+                mInitLeTargetTask.execute();
             }
             catch (Exception e)
             {
-                String logMessage = "Initializing Vuforia SDK failed";
-                vuforiaException = new SampleApplicationException(
+                String logMessage = "Initializing LeTarget SDK failed";
+                LeTargetException = new SampleApplicationException(
                     SampleApplicationException.INITIALIZATION_FAILURE,
                     logMessage);
                 Log.e(LOGTAG, logMessage);
             }
         }
 
-        if (vuforiaException != null)
+        if (LeTargetException != null)
         {
-            // Send Vuforia Exception to the application and call initDone
+            // Send LeTarget Exception to the application and call initDone
             // to stop initialization process
-            mSessionControl.onInitARDone(vuforiaException);
+            mSessionControl.onInitARDone(LeTargetException);
         }
     }
     
     
-    // Starts Vuforia, initialize and starts the camera and start the trackers
+    // Starts LeTarget, initialize and starts the camera and start the trackers
     private void startCameraAndTrackers(int camera) throws SampleApplicationException
     {
         String error;
@@ -194,39 +196,39 @@ public class SampleApplicationSession implements UpdateCallbackInterface
     public void startAR(int camera)
     {
         mCamera = camera;
-        SampleApplicationException vuforiaException = null;
+        SampleApplicationException LeTargetException = null;
 
         try {
-            mStartVuforiaTask = new StartVuforiaTask();
-            mStartVuforiaTask.execute();
+            mStartLeTargetTask = new StartLeTargetTask();
+            mStartLeTargetTask.execute();
         }
         catch (Exception e)
         {
-            String logMessage = "Starting Vuforia failed";
-            vuforiaException = new SampleApplicationException(
+            String logMessage = "Starting LeTarget failed";
+            LeTargetException = new SampleApplicationException(
                     SampleApplicationException.CAMERA_INITIALIZATION_FAILURE,
                     logMessage);
             Log.e(LOGTAG, logMessage);
         }
 
-        if (vuforiaException != null)
+        if (LeTargetException != null)
         {
-            // Send Vuforia Exception to the application and call initDone
+            // Send LeTarget Exception to the application and call initDone
             // to stop initialization process
-            mSessionControl.onInitARDone(vuforiaException);
+            mSessionControl.onInitARDone(LeTargetException);
         }
     }
 
     
-    // Stops any ongoing initialization, stops Vuforia
+    // Stops any ongoing initialization, stops LeTarget
     public void stopAR() throws SampleApplicationException
     {
         // Cancel potentially running tasks
-        if (mInitVuforiaTask != null
-            && mInitVuforiaTask.getStatus() != InitVuforiaTask.Status.FINISHED)
+        if (mInitLeTargetTask != null
+            && mInitLeTargetTask.getStatus() != InitLeTargetTask.Status.FINISHED)
         {
-            mInitVuforiaTask.cancel(true);
-            mInitVuforiaTask = null;
+            mInitLeTargetTask.cancel(true);
+            mInitLeTargetTask = null;
         }
         
         if (mLoadTrackerTask != null
@@ -236,14 +238,14 @@ public class SampleApplicationSession implements UpdateCallbackInterface
             mLoadTrackerTask = null;
         }
         
-        mInitVuforiaTask = null;
+        mInitLeTargetTask = null;
         mLoadTrackerTask = null;
         
         mStarted = false;
         
         stopCamera();
         
-        // Ensure that all asynchronous operations to initialize Vuforia
+        // Ensure that all asynchronous operations to initialize LeTarget
         // and loading the tracker datasets do not overlap:
         synchronized (mLifecycleLock)
         {
@@ -257,7 +259,7 @@ public class SampleApplicationSession implements UpdateCallbackInterface
             // Deinitialize the trackers:
             deinitTrackersResult = mSessionControl.doDeinitTrackers();
             
-            // Deinitialize Vuforia SDK:
+            // Deinitialize LeTarget SDK:
             Vuforia.deinit();
             
             if (!unloadTrackersResult)
@@ -274,34 +276,34 @@ public class SampleApplicationSession implements UpdateCallbackInterface
     }
     
 
-    // Resumes Vuforia, restarts the trackers and the camera
+    // Resumes LeTarget, restarts the trackers and the camera
     private void resumeAR()
     {
-        SampleApplicationException vuforiaException = null;
+        SampleApplicationException LeTargetException = null;
 
         try {
-            mResumeVuforiaTask = new ResumeVuforiaTask();
-            mResumeVuforiaTask.execute();
+            mResumeLeTargetTask = new ResumeLeTargetTask();
+            mResumeLeTargetTask.execute();
         }
         catch (Exception e)
         {
-            String logMessage = "Resuming Vuforia failed";
-            vuforiaException = new SampleApplicationException(
+            String logMessage = "Resuming LeTarget failed";
+            LeTargetException = new SampleApplicationException(
                     SampleApplicationException.INITIALIZATION_FAILURE,
                     logMessage);
             Log.e(LOGTAG, logMessage);
         }
 
-        if (vuforiaException != null)
+        if (LeTargetException != null)
         {
-            // Send Vuforia Exception to the application and call initDone
+            // Send LeTarget Exception to the application and call initDone
             // to stop initialization process
-            mSessionControl.onInitARDone(vuforiaException);
+            mSessionControl.onInitARDone(LeTargetException);
         }
     }
 
 
-    // Pauses Vuforia and stops the camera
+    // Pauses LeTarget and stops the camera
     public void pauseAR() throws SampleApplicationException
     {
         if (mStarted)
@@ -317,7 +319,7 @@ public class SampleApplicationSession implements UpdateCallbackInterface
     @Override
     public void Vuforia_onUpdate(State s)
     {
-        mSessionControl.onVuforiaUpdate(s);
+        mSessionControl.onLeTargetUpdate(s);
     }
     
     
@@ -334,8 +336,8 @@ public class SampleApplicationSession implements UpdateCallbackInterface
     // Methods to be called to handle lifecycle
     public void onResume()
     {
-        if (mResumeVuforiaTask == null
-                || mResumeVuforiaTask.getStatus() == ResumeVuforiaTask.Status.FINISHED)
+        if (mResumeLeTargetTask == null
+                || mResumeLeTargetTask.getStatus() == ResumeLeTargetTask.Status.FINISHED)
         {
             // onResume() will sometimes be called twice depending on the screen lock mode
             // This will prevent redundant AsyncTasks from being executed
@@ -361,8 +363,8 @@ public class SampleApplicationSession implements UpdateCallbackInterface
         Vuforia.onSurfaceCreated();
     }
     
-    // An async task to initialize Vuforia asynchronously.
-    private class InitVuforiaTask extends AsyncTask<Void, Integer, Boolean>
+    // An async task to initialize LeTarget asynchronously.
+    private class InitLeTargetTask extends AsyncTask<Void, Integer, Boolean>
     {
         // Initialize with invalid value:
         private int mProgressValue = -1;
@@ -373,14 +375,14 @@ public class SampleApplicationSession implements UpdateCallbackInterface
             // Prevent the onDestroy() method to overlap with initialization:
             synchronized (mLifecycleLock)
             {
-                Vuforia.setInitParameters(mActivity, mVuforiaFlags, "AaARwsP/////AAAAmV7j7EcF7k4ShBn0MLTai5kBZ+RiN7J3CBEhdKYMuA8tNLA6am/Kw6Vr9tux4fotVzt7hLBY+dis7GxpqbJkoiP0LvSmsFYifVHL62AkoeqdCvACMsBJNStEIfR+VP475TcjpA0TyALKXK6xxRtsAFRiTtUbooQS2WeBDn3qCzWx14PIJJdDZv8U3Mp/BPPxHs3xWsWjcp6nXqGdjM9vEFi6x9em06NR7HBmul9iP09VVx0JwyMRoX+MnU1xmUCtXIVB+RBzuAlfvZcbCz3XXDEfc7SPuvG2iGbIhMt7yM5d04Jsc1LxAhg8B3TMZpEfGDm4mhleOBp6VtlmXWz2Ey75YVmpL879b//PaHNmoAGP");
+                Vuforia.setInitParameters(mActivity, mLeTargetFlags, LICENSE_KEY);
 
                 do
                 {
-                    // Vuforia.init() blocks until an initialization step is
+                    // LeTarget.init() blocks until an initialization step is
                     // complete, then it proceeds to the next step and reports
                     // progress in percents (0 ... 100%).
-                    // If Vuforia.init() returns -1, it indicates an error.
+                    // If LeTarget.init() returns -1, it indicates an error.
                     // Initialization is done when progress has reached 100%.
                     mProgressValue = Vuforia.init();
                     
@@ -410,13 +412,13 @@ public class SampleApplicationSession implements UpdateCallbackInterface
         
         protected void onPostExecute(Boolean result)
         {
-            // Done initializing Vuforia, proceed to next application
+            // Done initializing LeTarget, proceed to next application
             // initialization status:
 
-            Log.d(LOGTAG, "InitVuforiaTask.onPostExecute: execution "
+            Log.d(LOGTAG, "InitLeTargetTask.onPostExecute: execution "
                     + (result ? "successful" : "failed"));
             
-            SampleApplicationException vuforiaException = null;
+            SampleApplicationException LeTargetException = null;
             
             if (result)
             {
@@ -427,7 +429,7 @@ public class SampleApplicationSession implements UpdateCallbackInterface
                 catch (Exception e)
                 {
                     String logMessage = "Failed to initialize tracker.";
-                    vuforiaException = new SampleApplicationException(
+                    LeTargetException = new SampleApplicationException(
                             SampleApplicationException.TRACKERS_INITIALIZATION_FAILURE,
                             logMessage);
                     Log.e(LOGTAG, logMessage);
@@ -442,25 +444,25 @@ public class SampleApplicationSession implements UpdateCallbackInterface
                 logMessage = getInitializationErrorString(mProgressValue);
                 
                 // Log error:
-                Log.e(LOGTAG, "InitVuforiaTask.onPostExecute: " + logMessage
+                Log.e(LOGTAG, "InitLeTargetTask.onPostExecute: " + logMessage
                     + " Exiting.");
 
-                vuforiaException = new SampleApplicationException(
+                LeTargetException = new SampleApplicationException(
                     SampleApplicationException.INITIALIZATION_FAILURE,
                     logMessage);
             }
 
-            if (vuforiaException != null)
+            if (LeTargetException != null)
             {
-                // Send Vuforia Exception to the application and call initDone
+                // Send LeTarget Exception to the application and call initDone
                 // to stop initialization process
-                mSessionControl.onInitARDone(vuforiaException);
+                mSessionControl.onInitARDone(LeTargetException);
             }
         }
     }
 
-    // An async task to resume Vuforia asynchronously
-    private class ResumeVuforiaTask extends AsyncTask<Void, Void, Void>
+    // An async task to resume LeTarget asynchronously
+    private class ResumeLeTargetTask extends AsyncTask<Void, Void, Void>
     {
         protected Void doInBackground(Void... params)
         {
@@ -475,13 +477,13 @@ public class SampleApplicationSession implements UpdateCallbackInterface
 
         protected void onPostExecute(Void result)
         {
-            Log.d(LOGTAG, "ResumeVuforiaTask.onPostExecute");
+            Log.d(LOGTAG, "ResumeLeTargetTask.onPostExecute");
 
-            // We may start the camera only if the Vuforia SDK has already been initialized
+            // We may start the camera only if the LeTarget SDK has already been initialized
             if (mStarted && !mCameraRunning)
             {
                 startAR(mCamera);
-                mSessionControl.onVuforiaResumed();
+                mSessionControl.onLeTargetResumed();
             }
         }
     }
@@ -501,7 +503,7 @@ public class SampleApplicationSession implements UpdateCallbackInterface
         protected void onPostExecute(Boolean result)
         {
 
-            SampleApplicationException vuforiaException = null;
+            SampleApplicationException LeTargetException = null;
             Log.d(LOGTAG, "InitTrackerTask.onPostExecute: execution "
                 + (result ? "successful" : "failed"));
 
@@ -516,7 +518,7 @@ public class SampleApplicationSession implements UpdateCallbackInterface
                     String logMessage = "Failed to load tracker data.";
                     Log.e(LOGTAG, logMessage);
 
-                    vuforiaException = new SampleApplicationException(
+                    LeTargetException = new SampleApplicationException(
                             SampleApplicationException.LOADING_TRACKERS_FAILURE,
                             logMessage);
                 }
@@ -527,16 +529,16 @@ public class SampleApplicationSession implements UpdateCallbackInterface
                 Log.e(LOGTAG, logMessage);
 
                 // Error loading dataset
-                vuforiaException = new SampleApplicationException(
+                LeTargetException = new SampleApplicationException(
                         SampleApplicationException.TRACKERS_INITIALIZATION_FAILURE,
                         logMessage);
             }
 
-            if (vuforiaException != null)
+            if (LeTargetException != null)
             {
-                // Send Vuforia Exception to the application and call initDone
+                // Send LeTarget Exception to the application and call initDone
                 // to stop initialization process
-                mSessionControl.onInitARDone(vuforiaException);
+                mSessionControl.onInitARDone(LeTargetException);
             }
         }
     }
@@ -557,7 +559,7 @@ public class SampleApplicationSession implements UpdateCallbackInterface
         protected void onPostExecute(Boolean result)
         {
             
-            SampleApplicationException vuforiaException = null;
+            SampleApplicationException LeTargetException = null;
             
             Log.d(LOGTAG, "LoadTrackerTask.onPostExecute: execution "
                 + (result ? "successful" : "failed"));
@@ -567,7 +569,7 @@ public class SampleApplicationSession implements UpdateCallbackInterface
                 String logMessage = "Failed to load tracker data.";
                 // Error loading dataset
                 Log.e(LOGTAG, logMessage);
-                vuforiaException = new SampleApplicationException(
+                LeTargetException = new SampleApplicationException(
                     SampleApplicationException.LOADING_TRACKERS_FAILURE,
                     logMessage);
             } else
@@ -586,14 +588,14 @@ public class SampleApplicationSession implements UpdateCallbackInterface
             
             // Done loading the tracker, update application status, send the
             // exception to check errors
-            mSessionControl.onInitARDone(vuforiaException);
+            mSessionControl.onInitARDone(LeTargetException);
         }
     }
 
     // An async task to start the camera and trackers
-    private class StartVuforiaTask extends AsyncTask<Void, Void, Boolean>
+    private class StartLeTargetTask extends AsyncTask<Void, Void, Boolean>
     {
-        SampleApplicationException vuforiaException = null;
+        SampleApplicationException LeTargetException = null;
         protected Boolean doInBackground(Void... params)
         {
             // Prevent the concurrent lifecycle operations:
@@ -604,8 +606,8 @@ public class SampleApplicationSession implements UpdateCallbackInterface
                 }
                 catch (SampleApplicationException e)
                 {
-                    Log.e(LOGTAG, "StartVuforiaTask.doInBackground: Could not start AR with exception: " + e);
-                    vuforiaException = e;
+                    Log.e(LOGTAG, "StartLeTargetTask.doInBackground: Could not start AR with exception: " + e);
+                    LeTargetException = e;
                 }
             }
 
@@ -614,16 +616,16 @@ public class SampleApplicationSession implements UpdateCallbackInterface
 
         protected void onPostExecute(Boolean result)
         {
-            Log.d(LOGTAG, "StartVuforiaTask.onPostExecute: execution "
+            Log.d(LOGTAG, "StartLeTargetTask.onPostExecute: execution "
                 + (result ? "successful" : "failed"));
 
-            mSessionControl.onVuforiaStarted();
+            mSessionControl.onLeTargetStarted();
 
-            if (vuforiaException != null)
+            if (LeTargetException != null)
             {
-                // Send Vuforia Exception to the application and call initDone
+                // Send LeTarget Exception to the application and call initDone
                 // to stop initialization process
-                mSessionControl.onInitARDone(vuforiaException);
+                mSessionControl.onInitARDone(LeTargetException);
             }
         }
     }
@@ -667,7 +669,7 @@ public class SampleApplicationSession implements UpdateCallbackInterface
     }
     
     
-    // Returns true if Vuforia is initialized, the trackers started and the
+    // Returns true if LeTarget is initialized, the trackers started and the
     // tracker data loaded
     private boolean isARRunning()
     {

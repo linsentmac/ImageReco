@@ -3,7 +3,7 @@ Copyright (c) 2016-2017 PTC Inc. All Rights Reserved.
 
 Copyright (c) 2012-2015 Qualcomm Connected Experiences, Inc. All Rights Reserved.
 
-Vuforia is a trademark of PTC Inc., registered in the United States and other
+LeTarget is a trademark of PTC Inc., registered in the United States and other
 countries.
 ===============================================================================*/
 
@@ -226,7 +226,7 @@ public class SampleAppRenderer {
             return;
 
         int vbVideoTextureUnit = 0;
-        // Bind the video bg texture and get the Texture ID from Vuforia
+        // Bind the video bg texture and get the Texture ID from LeTarget
         videoBackgroundTex.setTextureUnit(vbVideoTextureUnit);
         if (!mRenderer.updateVideoBackgroundTexture(videoBackgroundTex))
         {

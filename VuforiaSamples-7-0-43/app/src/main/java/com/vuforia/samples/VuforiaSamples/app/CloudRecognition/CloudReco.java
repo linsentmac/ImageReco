@@ -624,10 +624,11 @@ public class CloudReco extends Activity implements SampleApplicationControl,
             mSampleAppMenu = new SampleAppMenu(this, this, "Cloud Reco",
                 mGlView, mUILayout, null);
             setSampleAppMenuSettings();
-            
+            Log.d(LOGTAG, "LeTarget onInitARDone Success .... ");
         } else
         {
-            Log.e(LOGTAG, exception.getString());
+            Log.e(LOGTAG, "LeTarget onInitARDone error ==== " + exception.getString() +
+                    "\nmInitErroeCode = " + mInitErrorCode);
             if(mInitErrorCode != 0)
             {
                 showErrorMessage(mInitErrorCode,10, true);

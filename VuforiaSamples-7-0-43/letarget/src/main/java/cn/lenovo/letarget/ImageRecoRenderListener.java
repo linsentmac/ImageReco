@@ -6,9 +6,7 @@ package cn.lenovo.letarget;
 
 public interface ImageRecoRenderListener {
 
-    void imageRender(String recoName);
-
-    void onError();
+    void imageRecoSuccess(String recoName);
 
     void initARDone();
 }

@@ -3,7 +3,7 @@ Copyright (c) 2016-2017 PTC Inc. All Rights Reserved.
 
 Copyright (c) 2012-2014 Qualcomm Connected Experiences, Inc. All Rights Reserved.
 
-Vuforia is a trademark of PTC Inc., registered in the United States and other 
+LeTarget is a trademark of PTC Inc., registered in the United States and other
 countries.
 ===============================================================================*/
 
@@ -41,7 +41,7 @@ import cn.lenovo.letarget.SampleApplication.utils.Texture;
 // The renderer class for the CloudReco sample. 
 public class CloudRecoRenderer implements GLSurfaceView.Renderer, SampleAppRendererControl
 {
-    private SampleApplicationSession vuforiaAppSession;
+    private SampleApplicationSession leTargetAppSession;
     private SampleAppRenderer mSampleAppRenderer;
     
     private static final float OBJECT_SCALE_FLOAT = 0.003f;
@@ -64,7 +64,7 @@ public class CloudRecoRenderer implements GLSurfaceView.Renderer, SampleAppRende
     
     public CloudRecoRenderer(SampleApplicationSession session, Activity activity, ImageRecoRenderListener listener)
     {
-        vuforiaAppSession = session;
+        leTargetAppSession = session;
         mActivity = activity;
         mListener = listener;
 
@@ -78,9 +78,9 @@ public class CloudRecoRenderer implements GLSurfaceView.Renderer, SampleAppRende
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config)
     {
-        // Call Vuforia function to (re)initialize rendering after first use
+        // Call LeTarget function to (re)initialize rendering after first use
         // or after OpenGL ES context was lost (e.g. after onPause/onResume):
-        vuforiaAppSession.onSurfaceCreated();
+        leTargetAppSession.onSurfaceCreated();
 
         mSampleAppRenderer.onSurfaceCreated();
     }
@@ -90,8 +90,8 @@ public class CloudRecoRenderer implements GLSurfaceView.Renderer, SampleAppRende
     @Override
     public void onSurfaceChanged(GL10 gl, int width, int height)
     {
-        // Call Vuforia function to handle render surface size changes:
-        vuforiaAppSession.onSurfaceChanged(width, height);
+        // Call LeTarget function to handle render surface size changes:
+        leTargetAppSession.onSurfaceChanged(width, height);
 
         // RenderingPrimitives to be updated when some rendering change is done
         mSampleAppRenderer.onConfigurationChanged(mIsActive);
@@ -182,7 +182,7 @@ public class CloudRecoRenderer implements GLSurfaceView.Renderer, SampleAppRende
             Trackable trackable = trackableResult.getTrackable();
             String recName = trackable.getName();
             Log.d("Tmac-Cloud", "renderFrame Name = " + recName);
-            mListener.imageRender(recName);
+            mListener.imageRecoSuccess(recName);
             //mActivity.stopFinderIfStarted();
             
             // Renders the Augmentation View with the 3D Book data Panel
@@ -202,9 +202,9 @@ public class CloudRecoRenderer implements GLSurfaceView.Renderer, SampleAppRende
     
     private void renderAugmentation(TrackableResult trackableResult, float[] projectionMatrix)
     {
-        Matrix44F modelViewMatrix_Vuforia = Tool
+        Matrix44F modelViewMatrix_LeTarget = Tool
             .convertPose2GLMatrix(trackableResult.getPose());
-        float[] modelViewMatrix = modelViewMatrix_Vuforia.getData();
+        float[] modelViewMatrix = modelViewMatrix_LeTarget.getData();
         
         int textureIndex = 0;
         
