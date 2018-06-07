@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/VuforiaSamples-7-0-43.iml" filepath="$PROJECT_DIR$/VuforiaSamples-7-0-43.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/card_reco/card_reco.iml" filepath="$PROJECT_DIR$/card_reco/card_reco.iml" />
+      <module fileurl="file://$PROJECT_DIR$/letarget/letarget.iml" filepath="$PROJECT_DIR$/letarget/letarget.iml" />
+      <module fileurl="file://$PROJECT_DIR$/testcloudlibrary/testcloudlibrary.iml" filepath="$PROJECT_DIR$/testcloudlibrary/testcloudlibrary.iml" />
+      <module fileurl="file://$PROJECT_DIR$/testcloudtarget/testcloudtarget.iml" filepath="$PROJECT_DIR$/testcloudtarget/testcloudtarget.iml" />
+    </modules>
+  </component>
+</project>

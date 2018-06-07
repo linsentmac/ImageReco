@@ -1,0 +1,1 @@
+include ':app', ':testcloudtarget', ':card_reco', ':testcloudlibrary', ':letarget'
