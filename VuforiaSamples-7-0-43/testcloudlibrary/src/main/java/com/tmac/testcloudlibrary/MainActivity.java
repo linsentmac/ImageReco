@@ -55,7 +55,7 @@ public class MainActivity extends Activity implements ImageRecoRenderListener{
 
     private void requestPemission(){
         /**
-         * 第 1 步: 检查是否有相应的权限
+         * Check Permission
          */
         boolean isAllGranted = checkPermissionAllGranted(
                 new String[] {
@@ -70,11 +70,9 @@ public class MainActivity extends Activity implements ImageRecoRenderListener{
             return;
         }
 
-
         /**
-         * 第 2 步: 请求权限
+         * Requset Permission
          */
-        // 一次请求多个权限, 如果其他有权限是已经授予的将会自动忽略掉
         ActivityCompat.requestPermissions(
                 this,
                 new String[] {
@@ -86,9 +84,7 @@ public class MainActivity extends Activity implements ImageRecoRenderListener{
         );
     }
 
-    /**
-     * 第 3 步: 申请权限结果返回处理
-     */
+
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -96,7 +92,6 @@ public class MainActivity extends Activity implements ImageRecoRenderListener{
         if (requestCode == MY_PERMISSION_REQUEST_CODE) {
             boolean isAllGranted = true;
 
-            // 判断是否所有的权限都已经授予了
             for (int grant : grantResults) {
                 if (grant != PackageManager.PERMISSION_GRANTED) {
                     isAllGranted = false;
@@ -105,7 +100,6 @@ public class MainActivity extends Activity implements ImageRecoRenderListener{
             }
 
             if (isAllGranted) {
-                // 如果所有的权限都授予了, 则开始识别
                 cloudCardRecognize = new CloudCardRecognize(this, this, license_key, kAccessKey, kSecretKey);
             }
         }

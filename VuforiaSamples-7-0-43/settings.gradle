@@ -1,1 +1,1 @@
-include ':app', ':testcloudtarget', ':card_reco', ':testcloudlibrary', ':letarget'
+include ':app', ':testcloudtarget', ':card_reco', ':testcloudlibrary', ':letarget', ':sampletarget'

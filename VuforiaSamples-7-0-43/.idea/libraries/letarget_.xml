@@ -1,9 +1,9 @@
 <component name="libraryTable">
   <library name="letarget-">
     <CLASSES>
-      <root url="jar://$USER_HOME$/.android/build-cache/a0e1eb664939c539b1ec27123f700f96f69ba9f6/output/jars/classes.jar!/" />
-      <root url="jar://$USER_HOME$/.android/build-cache/a0e1eb664939c539b1ec27123f700f96f69ba9f6/output/jars/libs/Vuforia.jar!/" />
-      <root url="file://$USER_HOME$/.android/build-cache/a0e1eb664939c539b1ec27123f700f96f69ba9f6/output/res" />
+      <root url="jar://$USER_HOME$/.android/build-cache/1d946a7463fdf12ebb1a4aceb6ea6938902ef1f5/output/jars/classes.jar!/" />
+      <root url="file://$USER_HOME$/.android/build-cache/1d946a7463fdf12ebb1a4aceb6ea6938902ef1f5/output/res" />
+      <root url="jar://$USER_HOME$/.android/build-cache/1d946a7463fdf12ebb1a4aceb6ea6938902ef1f5/output/jars/libs/Vuforia.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
